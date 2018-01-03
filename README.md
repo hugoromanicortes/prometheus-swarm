@@ -65,6 +65,27 @@ scrape_configs:
 ### Alertmanager
 Alertmanager configuration is also based on external file configuration (config.yml). This file describes what action to trigger in case of notification from Prometheus (e.g generate a message in HipChat)
 
+```
+global:
+  hipchat_auth_token: xxx
+  hipchat_api_url: https://api.hipchat.com/
+route:
+  group_by:
+  - cluster
+  receiver: team-hipchat
+  routes:
+  - match:
+      severity: hipchat
+    receiver: team-hipchat
+receivers:
+- name: team-hipchat
+  hipchat_configs:
+  - auth_token: yyy
+    room_id: 12345
+    message_format: html
+    notify: true
+```
+
 ### Grafana
 Grafana configuration can be very complex. Into this example we simply configure the admin password as follow:
 

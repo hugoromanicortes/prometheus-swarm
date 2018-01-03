@@ -1,9 +1,18 @@
+global:
+  hipchat_auth_token: xxx
+  hipchat_api_url: https://api.hipchat.com/
 route:
-  receiver: slack
+  group_by:
+  - cluster
+  receiver: team-hipchat
+  routes:
+  - match:
+      severity: hipchat
+    receiver: team-hipchat
 receivers:
-- name: slack
-  slack_configs:
-  - send_resolved: true
-    username: <username>
-    channel: '#<channel-name>'
-    api_url: <incomming-webhook-url>
+- name: team-hipchat
+  hipchat_configs:
+  - auth_token: yyy
+    room_id: 12345
+    message_format: html
+    notify: true
