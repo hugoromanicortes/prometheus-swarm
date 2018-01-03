@@ -23,7 +23,7 @@ Website: https://prometheus.io/docs/alerting/alertmanager/
 ### Node Exporter
 Prometheus exporter for hardware and OS metrics exposed by *NIX kernels, written in Go with pluggable metric collectors.
 
-Website: [https://github.com/prometheus/node_exporter](https://github.com/prometheus/node_exporter)
+Website: [https://github.com/prometheus/node_exporter](https://github.com/prometheus/node_exporter){:target="_blank"}
 
 
 ## Configuration
