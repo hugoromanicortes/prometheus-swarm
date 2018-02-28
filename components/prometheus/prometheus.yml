@@ -24,3 +24,9 @@ scrape_configs:
     - tasks.node-exporter
     type: A
     port: 9100
+#- job_name: prometheus-rest-service
+#  scrape_interval: 5s
+#  metrics_path: /prometheus-rest-service-0.0.1-SNAPSHOT/metrics
+#  static_configs:
+#  - targets:
+#    - 10.71.32.235:8080
