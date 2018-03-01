@@ -2,7 +2,7 @@
 Prometheus is a monitoring framework
 
 ## Getting Started
-This project configure a Prometheus Server, an Alert Manager, Grafana and the Node Exporter.
+This project configure a Prometheus Server, an Alert Manager, Grafana and the Node Exporter. These components can be deployed on a Docker Swarn cluster and will come soon with a Kubernetes installation.
 
 ## Components
 ### Prometheus
@@ -34,60 +34,92 @@ The main configuration of prometheus is prometheus.yml. This file contains defau
 In addition we configure rules that will used in order to trigger the alertmanager
 
 ```
+# my global config
 global:
-  scrape_interval: 15s
-  evaluation_interval: 15s
+  scrape_interval:     15s # By default, scrape targets every 15 seconds.
+  evaluation_interval: 15s # By default, scrape targets every 15 seconds.
+  # scrape_timeout is set to the global default (10s).
+
+  # Attach these labels to any time series or alerts when communicating with
+  # external systems (federation, remote storage, Alertmanager).
   external_labels:
-    monitor: my-project
+      monitor: 'my-project'
+
+# Load and evaluate rules in this file every 'evaluation_interval' seconds.
 rule_files:
-- alert.rules
+  - 'alert.rules'
+  # - "first.rules"
+  # - "second.rules"
+
+# alert
 alerting:
   alertmanagers:
   - scheme: http
     static_configs:
     - targets:
-      - alertmanager:9093
+      - "alertmanager:9093"
+
+# A scrape configuration containing exactly one endpoint to scrape:
+# Here it's Prometheus itself.
 scrape_configs:
-- job_name: prometheus
-  scrape_interval: 5s
-  static_configs:
-  - targets:
-    - localhost:9090
-- job_name: node-exporter
-  scrape_interval: 5s
-  dns_sd_configs:
-  - names:
-    - tasks.node-exporter
-    type: A
-    port: 9100
+  # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
+
+  - job_name: 'prometheus'
+
+    # Override the global default and scrape targets from this job every 5 seconds.
+    scrape_interval: 5s
+
+    static_configs:
+         - targets: ['localhost:9090']
+
+
+  - job_name: 'cadvisor'
+
+    # Override the global default and scrape targets from this job every 5 seconds.
+    scrape_interval: 5s
+
+    dns_sd_configs:
+    - names:
+      - 'tasks.cadvisor'
+      type: 'A'
+      port: 8080
+
+    # static_configs:
+    #      - targets: ['cadvisor:8080']
+
+  - job_name: 'node-exporter'
+
+    # Override the global default and scrape targets from this job every 5 seconds.
+    scrape_interval: 5s
+
+    dns_sd_configs:
+    - names:
+      - 'tasks.node-exporter'
+      type: 'A'
+      port: 9100
+    
+    # static_configs:
+#      - targets: ['node-exporter:9100']
 ```
 
 ### Alertmanager
 Alertmanager configuration is also based on external file configuration (config.yml). This file describes what action to trigger in case of notification from Prometheus (e.g generate a message in HipChat)
 
 ```
-global:
-  hipchat_auth_token: xxx
-  hipchat_api_url: https://api.hipchat.com/
 route:
-  group_by:
-  - cluster
-  receiver: team-hipchat
-  routes:
-  - match:
-      severity: hipchat
-    receiver: team-hipchat
+    receiver: 'slack'
+
 receivers:
-- name: team-hipchat
-  hipchat_configs:
-  - auth_token: yyy
-    room_id: 12345
-    message_format: html
-    notify: true
+    - name: 'slack'
+      slack_configs:
+          - send_resolved: true
+            username: '<username>'
+            channel: '#<channel-name>'
+            api_url: '<incomming-webhook-url>'
 ```
 
 ### Grafana
-Grafana configuration can be very complex. Into this example we simply configure the admin password as follow:
+Grafana configuration can be very complex. Into this example we simply configure the admin password as follow (components/grafana/config.monitoring):
 
 ```
 GF_SECURITY_ADMIN_PASSWORD=admin
@@ -95,7 +127,21 @@ GF_USERS_ALLOW_SIGN_UP=false
 ```
 
 ## Run the framework
+From the /prometheus/components project directory run the following command:
 
-```
-docker-compose up -d
-```
+	$ HOSTNAME=$(hostname) docker stack deploy -c docker-compose.yml prom
+
+
+That's it the `docker stack deploy' command deploys the entire Grafana and Prometheus stack automatically to the Docker Swarm. By default cAdvisor and node-exporter are set to Global deployment which means they will propogate to every docker host attached to the Swarm.
+
+In order to check the status of the newly created stack:
+
+    $ docker stack ps prom
+
+View running services:
+
+    $ docker service ls
+
+View logs for a specific service
+
+    $ docker service logs prom_<service_name>
