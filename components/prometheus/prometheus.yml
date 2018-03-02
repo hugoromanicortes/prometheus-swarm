@@ -35,7 +35,7 @@ scrape_configs:
     - names:
       - 'tasks.prometheus'
       type: 'A'
-      port: 8080
+      port: 9090
 #    static_configs:
 #         - targets: ['localhost:9090']
 
