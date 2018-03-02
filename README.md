@@ -1,8 +1,8 @@
 # Prometheus
-Prometheus is a monitoring framework
+Prometheus is a monitoring framework for a Docker infrastructure. It's part of the Cloud Native Computing Foundation (https://www.cncf.io/).
 
 ## Getting Started
-This project configure a Prometheus Server, an Alert Manager, Grafana and the Node Exporter. These components can be deployed on a Docker Swarn cluster and will come soon with a Kubernetes installation.
+This project configure a Prometheus Server, an Alert Manager, Grafana and a Node Exporter. These components can deployed in a Docker Swarn cluster (docker-compose) and will come soon with a Kubernetes installation.
 
 ## Components
 ### Prometheus
@@ -31,7 +31,7 @@ For a complete documentation on configuration please refer to official website. 
 
 ### Prometheus
 The main configuration of prometheus is prometheus.yml. This file contains default scraping configuration plus target configuration (i.e. job_name).
-In addition we configure rules that will used in order to trigger the alertmanager
+In addition we configure rules (alert.rules) that will be used in order to trigger the alertmanager
 
 ```
 # my global config
@@ -103,7 +103,7 @@ scrape_configs:
 ```
 
 ### Alertmanager
-Alertmanager configuration is also based on external file configuration (config.yml). This file describes what action to trigger in case of notification from Prometheus (e.g generate a message in HipChat)
+Alertmanager configuration is also based on external file configuration (config.yml). This file describes which action to trigger in case of notification from Prometheus (e.g generate a message to HipChat, Slack or other)
 
 ```
 route:
@@ -126,17 +126,21 @@ GF_SECURITY_ADMIN_PASSWORD=admin
 GF_USERS_ALLOW_SIGN_UP=false
 ```
 
-## Run the framework
+In addition sample dashboards are available under (grafana/dashboards)
+	- node-exporter-server-metrics.json
+	- docker-dashboard.json (source = https://grafana.com/dashboards/179)
+
+## Run the stack
 From the /prometheus/components project directory run the following command:
 
-	$ HOSTNAME=$(hostname) docker stack deploy -c docker-compose.yml prom
+	$ HOSTNAME=$(hostname) docker stack deploy -c docker-compose.yml prometheus
 
 
-That's it the `docker stack deploy' command deploys the entire Grafana and Prometheus stack automatically to the Docker Swarm. By default cAdvisor and node-exporter are set to Global deployment which means they will propogate to every docker host attached to the Swarm.
+The 'docker stack deploy' command deploys the entire Grafana and Prometheus stack automatically to the Docker Swarm. By default cAdvisor and node-exporter are set to Global deployment which means they will propogate to every docker host attached to the Swarm.
 
 In order to check the status of the newly created stack:
 
-    $ docker stack ps prom
+    $ docker stack ps prometheus
 
 View running services:
 
@@ -144,4 +148,4 @@ View running services:
 
 View logs for a specific service
 
-    $ docker service logs prom_<service_name>
+    $ docker service logs prometheus_<service_name>
