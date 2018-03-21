@@ -60,4 +60,15 @@ scrape_configs:
       port: 9100    
 #    static_configs:
 #      - targets: ['node-exporter:9100']
+
+  - job_name: 'jaeger'
+    # Override the global default and scrape targets from this job every 5 seconds.
+    scrape_interval: 5s
+    dns_sd_configs:
+    - names:
+      - 'tasks.jaeger'
+      type: 'A'
+      port: 16686    
+#    static_configs:
+#      - targets: ['jaeger:16686']
     
