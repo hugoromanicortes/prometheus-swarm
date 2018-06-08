@@ -25,7 +25,6 @@ Prometheus exporter for hardware and OS metrics exposed by *NIX kernels, written
 
 Website: https://github.com/prometheus/node_exporter
 
-
 ## Configuration
 For a complete documentation on configuration please refer to official website. Please note that we are using here a docker-compose.yml file in order to load and configure docker images.
 
@@ -100,6 +99,82 @@ scrape_configs:
     
     # static_configs:
 #      - targets: ['node-exporter:9100']
+```
+
+### Swarm auto discovery
+
+In a Swarm context (i.e. cluster manager) it is very usefull to enable autodiscovery of services and then generate automatically a prometheus configuration. At this point of time it doesn't exist a "swarm_config" (https://prometheus.io/docs/prometheus/latest/configuration/configuration/) so I propose to use a docker image that generate a file configuration for prometheus (seqvence/prometheus-swarm). This project is an unofficial project so it is recommended to use it carrefully.
+
+Additional informations can be found here: https://github.com/ContainerSolutions/prometheus-swarm-discovery
+
+In the docker compose we added 3 main configurations:
+
+```
+...
+    swarm-endpoints: {}
+...
+services:
+
+  prometheus:
+    image: prom/prometheus:v2.2.1
+    volumes:
+      - ./prometheus/:/etc/prometheus/
+      - prometheus_data:/prometheus
+      - swarm-endpoints:/etc/swarm-endpoints/
+....
+  swarm-discover:
+      image: seqvence/prometheus-swarm
+      command: ["-i", "5", "-o", "/swarm-endpoints/swarm-endpoints.json", "-p" , "prometheus_prometheus"]
+      volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - swarm-endpoints:/swarm-endpoints/
+      labels:
+          prometheus.ignore: "true"
+      deploy:
+        placement:
+          constraints:
+            - node.role == manager
+```
+
+Then the configuration of prometheus just need to look like as follow:
+
+```
+# my global config
+global:
+  scrape_interval:     15s # By default, scrape targets every 15 seconds.
+  evaluation_interval: 15s # By default, scrape targets every 15 seconds.
+  # scrape_timeout is set to the global default (10s).
+
+  # Attach these labels to any time series or alerts when communicating with
+  # external systems (federation, remote storage, Alertmanager).
+  external_labels:
+      monitor: 'my-prometheus-project'
+
+# Load and evaluate rules in this file every 'evaluation_interval' seconds.
+rule_files:
+  - 'alert.rules'
+  # - "first.rules"
+  # - "second.rules"
+
+# alert
+alerting:
+  alertmanagers:
+  - scheme: http
+    static_configs:
+    - targets:
+      - "alertmanager:9093"
+
+# A scrape configuration containing exactly one endpoint to scrape:
+# Here it's Prometheus itself.
+scrape_configs:
+  # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
+
+  # Swarm job discover
+  - job_name: swarm-service-endpoints
+    file_sd_configs:
+      - files:
+        - /etc/swarm-endpoints/swarm-endpoints.json
+    
 ```
 
 ### Alertmanager

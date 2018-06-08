@@ -71,4 +71,10 @@ scrape_configs:
       port: 16686    
 #    static_configs:
 #      - targets: ['jaeger:16686']
+
+  # Swarm job discover
+  - job_name: swarm-service-endpoints
+    file_sd_configs:
+      - files:
+        - /etc/swarm-endpoints/swarm-endpoints.json
     

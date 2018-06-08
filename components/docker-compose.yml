@@ -3,6 +3,7 @@ version: '3.1'
 volumes:
     prometheus_data: {}
     grafana_data: {}
+    swarm-endpoints: {}
 
 networks:
   front-tier:
@@ -11,10 +12,11 @@ networks:
 services:
 
   prometheus:
-    image: prom/prometheus:v2.1.0
+    image: prom/prometheus:v2.2.1
     volumes:
       - ./prometheus/:/etc/prometheus/
       - prometheus_data:/prometheus
+      - swarm-endpoints:/etc/swarm-endpoints/
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
@@ -36,7 +38,7 @@ services:
           - node.hostname == ${HOSTNAME}
 
   node-exporter:
-    image: prom/node-exporter
+    image: prom/node-exporter:v0.16.0
     volumes:
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
@@ -55,7 +57,7 @@ services:
       mode: global
 
   alertmanager:
-    image: prom/alertmanager
+    image: prom/alertmanager:v0.14.0
     ports:
       - 9093:9093
     volumes:
@@ -71,7 +73,7 @@ services:
         constraints:
           - node.hostname == ${HOSTNAME}
   cadvisor:
-    image: google/cadvisor
+    image: google/cadvisor:v0.29.0
     volumes:
       - /:/rootfs:ro
       - /var/run:/var/run:rw
@@ -86,7 +88,7 @@ services:
       mode: global
 
   grafana:
-    image: grafana/grafana
+    image: grafana/grafana:5.1.0
     depends_on:
       - prometheus
     ports:
@@ -99,3 +101,16 @@ services:
       - back-tier
       - front-tier
     restart: always
+    
+  swarm-discover:
+    image: seqvence/prometheus-swarm
+    command: ["-i", "5", "-o", "/swarm-endpoints/swarm-endpoints.json", "-p" , "prometheus_prometheus"]
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - swarm-endpoints:/swarm-endpoints/
+    labels:
+        prometheus.ignore: "true"
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
