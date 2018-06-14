@@ -2,7 +2,7 @@
 Prometheus is a monitoring framework for a Docker infrastructure. It's part of the Cloud Native Computing Foundation (https://www.cncf.io/).
 
 ## Getting Started
-This project configure a Prometheus Server, an Alert Manager, Grafana and a Node Exporter. These components can deployed in a Docker Swarn cluster (docker-compose) and will come soon with a Kubernetes installation.
+This project configure a Prometheus Server, an Alert Manager, Grafana and a Node Exporter. These components can be deployed in a Docker Swarn cluster (docker-compose) and will come soon with a Kubernetes installation.
 
 ## Components
 ### Prometheus

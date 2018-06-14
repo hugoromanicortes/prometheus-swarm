@@ -14,7 +14,7 @@ services:
   prometheus:
     image: prom/prometheus:v2.2.1
     volumes:
-      - ./prometheus/:/etc/prometheus/
+      - ./components/prometheus/:/etc/prometheus/
       - prometheus_data:/prometheus
       - swarm-endpoints:/etc/swarm-endpoints/
     command:
@@ -61,7 +61,7 @@ services:
     ports:
       - 9093:9093
     volumes:
-      - ./alertmanager/:/etc/alertmanager/
+      - ./components/alertmanager/:/etc/alertmanager/
     networks:
       - back-tier
     restart: always
@@ -96,7 +96,7 @@ services:
     volumes:
       - grafana_data:/var/lib/grafana
     env_file:
-      - ./grafana/config.monitoring
+      - ./components/grafana/config.monitoring
     networks:
       - back-tier
       - front-tier
